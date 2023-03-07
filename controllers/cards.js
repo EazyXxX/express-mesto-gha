@@ -1,13 +1,15 @@
 /* eslint-disable no-underscore-dangle */
+const card = require('../models/card');
 const Card = require('../models/card');
+const { CodeError, CodeSuccess } = require('../statusCode');
 
 const getCards = async (req, res) => {
   try {
     const cards = await Card.find({});
-    return res.status(200).json(cards);
-  } catch (e) {
-    console.error(e);
-    return res.status(500).send({ message: 'Произошла ошибка' });
+    return res.json(cards);
+  } catch (err) {
+    console.error(err);
+    return res.status(CodeError.SERVER_ERROR).send({ message: 'Произошла ошибка' });
   }
 };
 
@@ -16,74 +18,60 @@ const createCard = async (req, res) => {
     const owner = req.user._id;
     const { name, link } = req.body;
     await Card.create({ name, link, owner });
-    return res.status(201).json(req.body);
-  } catch (e) {
-    if (e.name === 'ValidationError') {
-      console.error(e);
-      return res.status(400).send({ message: 'Некорректные данные при создании карточки' });
+    return res.status(CodeSuccess.CREATED).json(card);
+  } catch (err) {
+    if (err.name === 'ValidationError') {
+      console.error(err);
+      return res.status(CodeError.BAD_REQUEST).send({ message: 'Некорректные данные при создании карточки' });
     }
-    console.error(e);
-    return res.status(500).send({ message: 'Произошла ошибка' });
+    console.error(err);
+    return res.status(CodeError.SERVER_ERROR).send({ message: 'Произошла ошибка' });
   }
 };
 
 const deleteCard = async (req, res) => {
+  const { cardId } = req.params;
   try {
-    const admin = req.user._id;
-    const { cardId } = req.params;
-    const card = await Card.findById(cardId);
+    await Card.findById(cardId);
     if (card === null) {
-      return res.status(404).send({ message: `Карточка ${cardId} не найдена` });
-    }
-
-    const owner = card.owner.toHexString();
-
-    if (owner !== admin) {
-      return res.status(500).send({ message: 'Удалять можно только свои карточки' });
+      return res.status(CodeError.NOT_FOUND).send({ message: `Карточка ${cardId} не найдена` });
     }
     await Card.findByIdAndRemove(cardId);
-    return res.status(200).send({ message: `Карточка ${cardId} удалена` });
-  } catch (e) {
-    console.error(e);
-    return res.status(500).send({ message: 'При попытке удалить карточку произошла ошибка' });
+    return res.send({ message: `Карточка ${cardId} удалена` });
+  } catch (err) {
+    if (err.name === 'CastError') {
+      console.error(err);
+      return res.status(CodeError.BAD_REQUEST).send({ message: 'Передан некорректный id карточки.' });
+    }
+    console.error(err);
+    return res.status(CodeError.SERVER_ERROR).send({ message: 'При попытке удалить карточку произошла ошибка' });
   }
 };
 
-const likeCard = async (req, res) => {
+const updateLike = async (req, res, method) => {
   try {
     const { cardId } = req.params;
-
     await Card.findByIdAndUpdate(
       cardId,
-      { $addToSet: { likes: req.user._id } }, // добавить _id в массив, если его там нет
+      { [method]: { likes: req.user._id } },
       { new: true },
     );
-
-    const card = await Card.findById(cardId);
-    return res.status(200).json(card.likes);
-  } catch (e) {
-    console.error(e);
-    return res.status(500).send({ message: 'Произошла ошибка.' });
+    if (card === null) {
+      return res.status(CodeError.NOT_FOUND).send({ message: 'Карточка по указанному id не найдена.' });
+    }
+    return res.send({ likes: card.likes });
+  } catch (err) {
+    if (err.name === 'CastError') {
+      console.error(err);
+      return res.status(CodeError.BAD_REQUEST).send({ message: 'Передан некорректный id карточки.' });
+    }
+    console.error(err);
+    return res.status(CodeError.SERVER_ERROR).send({ message: 'Произошла ошибка' });
   }
 };
 
-const deleteLikeCard = async (req, res) => {
-  try {
-    const { cardId } = req.params;
-
-    await Card.findByIdAndUpdate(
-      cardId,
-      { $pull: { likes: req.user._id } }, // убрать _id из массива
-      { new: true },
-    );
-
-    const card = await Card.findById(cardId);
-    return res.status(200).json(card.likes);
-  } catch (e) {
-    console.error(e);
-    return res.status(500).send({ message: 'Произошла ошибка.' });
-  }
-};
+const likeCard = (req, res) => updateLike(req, res, '$addToSet');
+const deleteLikeCard = (req, res) => updateLike(req, res, '$pull');
 
 module.exports = {
   getCards,

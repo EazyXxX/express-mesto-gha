@@ -4,10 +4,10 @@ const {
   createUser, getUser, getUsers, updateUserProfile, updateUserAvatar,
 } = require('../controllers/users');
 
-users.get('/users', getUsers);
-users.get('/users/:id', getUser);
-users.post('/users', createUser);
-users.patch('/users/me', updateUserProfile);
-users.patch('/users/me/avatar', updateUserAvatar);
+users.get('/', getUsers);
+users.get('/:userId', getUser);
+users.post('/', createUser);
+users.patch('/me', updateUserProfile);
+users.patch('/me/avatar', updateUserAvatar);
 
 module.exports = users;
