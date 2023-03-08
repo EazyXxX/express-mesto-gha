@@ -23,7 +23,7 @@ app.use((req, res, next) => {
   next();
 });
 
-app.use('*', (req, res) => res.status(CodeError.NOT_FOUND).send({ message: 'Страница не существует.' }));
+app.use('*', (req, res) => res.status(CodeError.BAD_REQUEST).send({ message: 'Страница не существует.' }));
 
 mongoose.connect('mongodb://localhost:27017/mestodb', {
   useNewUrlParser: true,
