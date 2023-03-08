@@ -1,5 +1,4 @@
-/* eslint-disable no-underscore-dangle */
-const card = require('../models/card');
+/* eslint-disable no-shadow */
 const Card = require('../models/card');
 const { CodeError, CodeSuccess } = require('../statusCode');
 
@@ -17,7 +16,7 @@ const createCard = async (req, res) => {
   try {
     const owner = req.user._id;
     const { name, link } = req.body;
-    await Card.create({ name, link, owner });
+    const card = await Card.create({ name, link, owner });
     return res.status(CodeSuccess.CREATED).json(card);
   } catch (err) {
     if (err.name === 'ValidationError') {
@@ -32,7 +31,7 @@ const createCard = async (req, res) => {
 const deleteCard = async (req, res) => {
   const { cardId } = req.params;
   try {
-    await Card.findById(cardId);
+    const card = await Card.findById(cardId);
     if (card === null) {
       return res.status(CodeError.NOT_FOUND).send({ message: `Карточка ${cardId} не найдена` });
     }
@@ -51,19 +50,19 @@ const deleteCard = async (req, res) => {
 const updateLike = async (req, res, method) => {
   try {
     const { cardId } = req.params;
-    await Card.findByIdAndUpdate(
+    const card = await Card.findByIdAndUpdate(
       cardId,
       { [method]: { likes: req.user._id } },
       { new: true },
     );
     if (card === null) {
-      return res.status(CodeError.NOT_FOUND).send({ message: 'Карточка по указанному id не найдена.' });
+      return res.status(CodeError.NOT_FOUND).send({ message: 'Карточка по указанному id не найдена' });
     }
     return res.send({ likes: card.likes });
   } catch (err) {
     if (err.name === 'CastError') {
       console.error(err);
-      return res.status(CodeError.BAD_REQUEST).send({ message: 'Передан некорректный id карточки.' });
+      return res.status(CodeError.BAD_REQUEST).send({ message: 'Передан некорректный id карточки' });
     }
     console.error(err);
     return res.status(CodeError.SERVER_ERROR).send({ message: 'Произошла ошибка' });
