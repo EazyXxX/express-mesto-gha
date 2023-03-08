@@ -5,6 +5,8 @@ const express = require('express');
 const mongoose = require('mongoose');
 const bodyParser = require('body-parser');
 const { CodeError } = require('./statusCode');
+const users = require('./routes/users');
+const cards = require('./routes/cards');
 
 const app = express();
 
