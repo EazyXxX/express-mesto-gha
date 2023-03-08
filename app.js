@@ -7,6 +7,7 @@ const path = require('path');
 const bodyParser = require('body-parser');
 const users = require('./routes/users');
 const cards = require('./routes/cards');
+const { CodeError } = require('./statusCode');
 
 const app = express();
 
