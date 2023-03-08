@@ -2,6 +2,16 @@
 const User = require('../models/user');
 const { CodeError, CodeSuccess } = require('../statusCode');
 
+const getUsers = async (req, res) => {
+  try {
+    const users = await User.find({});
+    return res.json(users);
+  } catch (e) {
+    console.error(e);
+    return res.status(CodeError.SERVER_ERROR).send({ message: 'Произошла ошибка' });
+  }
+};
+
 const createUser = async (req, res) => {
   try {
     const { name, about, avatar } = req.body;
@@ -10,10 +20,10 @@ const createUser = async (req, res) => {
   } catch (e) {
     if (e.name === 'ValidationError') {
       console.error(e);
-      return res.status(CodeError.BAD_REQUEST).send({ message: 'Переданы некорректные данные при создании.' });
+      return res.status(CodeError.BAD_REQUEST).send({ message: 'Переданы некорректные данные при создании' });
     }
     console.error(e);
-    return res.status(CodeError.SERVER_ERROR).send({ message: 'Произошла ошибка при попытке создать пользователя.' });
+    return res.status(CodeError.SERVER_ERROR).send({ message: 'Произошла ошибка при попытке создать пользователя' });
   }
 };
 
@@ -22,7 +32,7 @@ const getUser = async (req, res) => {
     const { userId } = req.params;
     const user = await User.findById(userId);
     if (user === null) {
-      return res.status(CodeError.NOT_FOUND).send({ message: `Пользователь по указанному _id: ${userId} не найден.` });
+      return res.status(CodeError.NOT_FOUND).send({ message: `Пользователь по указанному _id: ${userId} не найден` });
     }
     return res.json(user);
   } catch (e) {
@@ -30,16 +40,6 @@ const getUser = async (req, res) => {
       console.error(e);
       return res.status(CodeError.BAD_REQUEST).send({ message: 'Передан некорректный id' });
     }
-    console.error(e);
-    return res.status(CodeError.SERVER_ERROR).send({ message: 'Произошла ошибка' });
-  }
-};
-
-const getUsers = async (req, res) => {
-  try {
-    const users = await User.find({});
-    return res.json(users);
-  } catch (e) {
     console.error(e);
     return res.status(CodeError.SERVER_ERROR).send({ message: 'Произошла ошибка' });
   }
@@ -68,10 +68,10 @@ const updateUserAvatar = async (req, res) => {
   } catch (e) {
     if (e.name === 'ValidationError') {
       console.error(e);
-      return res.status(CodeError.BAD_REQUEST).send({ message: 'Переданы некорректные данные для изменения фотографии профиля.' });
+      return res.status(CodeError.BAD_REQUEST).send({ message: 'Переданы некорректные данные для изменения фотографии профиля' });
     }
     console.error(e);
-    return res.status(CodeError.SERVER_ERROR).send({ message: 'Произошла ошибка при попытке изменить фото профиля.' });
+    return res.status(CodeError.SERVER_ERROR).send({ message: 'Произошла ошибка при попытке изменить фото профиля' });
   }
 };
 
