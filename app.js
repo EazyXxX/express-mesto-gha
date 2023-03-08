@@ -3,10 +3,7 @@
 /* eslint-disable import/no-extraneous-dependencies */
 const express = require('express');
 const mongoose = require('mongoose');
-const path = require('path');
 const bodyParser = require('body-parser');
-const users = require('./routes/users');
-const cards = require('./routes/cards');
 const { CodeError } = require('./statusCode');
 
 const app = express();
@@ -23,6 +20,9 @@ app.use((req, res, next) => {
   next();
 });
 
+app.use('/users', users);
+app.use('/cards', cards);
+
 app.use('*', (req, res) => res.status(CodeError.BAD_REQUEST).send({ message: 'Страница не существует.' }));
 
 mongoose.connect('mongodb://localhost:27017/mestodb', {
@@ -34,10 +34,6 @@ mongoose.connect('mongodb://localhost:27017/mestodb', {
 mongoose.set('runValidators', true);
 
 app.use(express.json());
-
-app.use(express.static(path.join(__dirname, 'public')));
-app.use('/users', users);
-app.use('/cards', cards);
 
 app.listen(PORT, (error) => {
   error ? console.log(error) : console.log(`App listening on port ${PORT}`);
