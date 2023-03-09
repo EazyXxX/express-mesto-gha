@@ -31,8 +31,7 @@ const createCard = async (req, res) => {
 const deleteCard = async (req, res) => {
   const { cardId } = req.params;
   try {
-    const card = await Card.findById(cardId);
-    if (card === null) {
+    if (Card.findById(cardId) === null) {
       return res.status(CodeError.NOT_FOUND).send({ message: `Карточка ${cardId} не найдена` });
     }
     await Card.findByIdAndRemove(cardId);

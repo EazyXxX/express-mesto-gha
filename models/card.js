@@ -4,17 +4,17 @@ const cardSchema = new mongoose.Schema(
   {
     name: {
       type: String,
-      required: true,
-      minlength: 2,
-      maxlength: 30,
+      required: [true, 'Необходимо ввести название'],
+      minlength: [2, 'Название должно быть больше 2 символов'],
+      maxlength: [30, 'Название должно быть меньше 30 символов'],
     },
     link: {
       type: String,
-      required: true,
+      required: [true, 'Необходимо ввести ссылку'],
     },
     owner: {
       type: mongoose.Schema.Types.ObjectId,
-      required: true,
+      required: [true, 'Необходимы данные создателя карточки'],
       ref: 'user',
     },
     likes: {
