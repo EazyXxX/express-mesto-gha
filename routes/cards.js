@@ -10,7 +10,7 @@ cards.post('/', celebrate({
   body: Joi.object().keys({
     title: Joi.string().required().min(2).max(30),
     text: Joi.string().required().min(2),
-  }),
+  }).unknown(true),
 }), createCard);
 cards.delete('/:cardId', celebrate({
   headers: Joi.object().keys({
