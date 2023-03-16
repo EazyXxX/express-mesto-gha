@@ -5,7 +5,7 @@ const authMiddleware = async (req, res, next) => {
   const { authorization } = req.headers;
 
   if (!authorization || !authorization.startsWith('Bearer ')) {
-    next(UnauthorizedError);
+    res.status(UnauthorizedError).send({ message: 'Данного пользователя не существует' });
   }
 
   const token = authorization.replace('Bearer ', '');
@@ -17,7 +17,8 @@ const authMiddleware = async (req, res, next) => {
     req.user = payload;
     next();
   } catch (err) {
-    next(UnauthorizedError);
+    console.error(err);
+    res.status(UnauthorizedError).send({ message: 'Данного пользователя не существует' });
   }
 };
 
