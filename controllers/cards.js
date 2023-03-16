@@ -1,14 +1,18 @@
+/* eslint-disable no-undef */
+/* eslint-disable consistent-return */
 /* eslint-disable no-shadow */
 const Card = require('../models/card');
-const { CodeError, CodeSuccess } = require('../statusCode');
+const { CodeSuccess } = require('../statusCode');
+const { BadRequestError } = require('../errors/BadRequestError');
+const { NotFoundError } = require('../errors/NotFoundError');
+const { ServerError } = require('../errors/ServerError');
 
 const getCards = async (req, res) => {
   try {
     const cards = await Card.find({});
     return res.json(cards);
   } catch (err) {
-    console.error(err);
-    return res.status(CodeError.SERVER_ERROR).send({ message: 'Произошла ошибка' });
+    next(ServerError);
   }
 };
 
@@ -20,29 +24,27 @@ const createCard = async (req, res) => {
     return res.status(CodeSuccess.CREATED).json(card);
   } catch (err) {
     if (err.name === 'ValidationError') {
-      console.error(err);
-      return res.status(CodeError.BAD_REQUEST).send({ message: 'Некорректные данные при создании карточки' });
+      next(BadRequestError);
     }
-    console.error(err);
-    return res.status(CodeError.SERVER_ERROR).send({ message: 'Произошла ошибка' });
+    next(ServerError);
   }
 };
 
 const deleteCard = async (req, res) => {
   const { cardId } = req.params;
   try {
-    if (await Card.findById(cardId) === null) {
-      return res.status(CodeError.NOT_FOUND).send({ message: `Карточка ${cardId} не найдена` });
+    if (req.user._id) {
+      if (await Card.findById(cardId) === null) {
+        next(NotFoundError);
+      }
+      await Card.findByIdAndRemove(cardId);
+      return res.send({ message: `Карточка ${cardId} удалена` });
     }
-    await Card.findByIdAndRemove(cardId);
-    return res.send({ message: `Карточка ${cardId} удалена` });
   } catch (err) {
     if (err.name === 'CastError') {
-      console.error(err);
-      return res.status(CodeError.BAD_REQUEST).send({ message: 'Передан некорректный id карточки.' });
+      next(BadRequestError);
     }
-    console.error(err);
-    return res.status(CodeError.SERVER_ERROR).send({ message: 'При попытке удалить карточку произошла ошибка' });
+    next(ServerError);
   }
 };
 
@@ -55,16 +57,14 @@ const updateLike = async (req, res, method) => {
       { new: true },
     );
     if (card === null) {
-      return res.status(CodeError.NOT_FOUND).send({ message: 'Карточка по указанному id не найдена' });
+      next(NotFoundError);
     }
     return res.send({ likes: card.likes });
   } catch (err) {
     if (err.name === 'CastError') {
-      console.error(err);
-      return res.status(CodeError.BAD_REQUEST).send({ message: 'Передан некорректный id карточки' });
+      next(BadRequestError);
     }
-    console.error(err);
-    return res.status(CodeError.SERVER_ERROR).send({ message: 'Произошла ошибка' });
+    next(ServerError);
   }
 };
 
