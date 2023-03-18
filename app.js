@@ -10,6 +10,8 @@ const { login } = require('./controllers/users');
 const { createUser } = require('./controllers/users');
 const authMiddleware = require('./middlewares/auth');
 
+mongoose.set('strictQuery', false);
+
 const app = express();
 
 const PORT = 3000;
