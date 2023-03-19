@@ -1,6 +1,5 @@
 /* eslint-disable no-undef */
 /* eslint-disable consistent-return */
-/* eslint-disable no-underscore-dangle */
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 const User = require('../models/user');

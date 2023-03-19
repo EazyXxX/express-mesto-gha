@@ -6,8 +6,7 @@ const { errors } = require('celebrate');
 const { CodeError } = require('./statusCode');
 const users = require('./routes/users');
 const cards = require('./routes/cards');
-const { login } = require('./controllers/users');
-const { createUser } = require('./controllers/users');
+const { login, createUser } = require('./controllers/users');
 const authMiddleware = require('./middlewares/auth');
 
 mongoose.set('strictQuery', false);
