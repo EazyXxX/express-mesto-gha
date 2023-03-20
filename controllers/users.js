@@ -5,10 +5,8 @@ const jwt = require('jsonwebtoken');
 const User = require('../models/user');
 const { CodeSuccess } = require('../statusCode');
 const { BadRequestError } = require('../errors/BadRequestError');
-const { UnauthorizedError } = require('../errors/UnauthorizedError');
 const { NotFoundError } = require('../errors/NotFoundError');
 const { ServerError } = require('../errors/ServerError');
-const { EmailExistsError } = require('../errors/EmailExistsError');
 
 const getUsers = async (req, res) => {
   try {
@@ -19,7 +17,7 @@ const getUsers = async (req, res) => {
   }
 };
 
-const createUser = async (req, res) => {
+const createUser = async (req, res, next) => {
   try {
     const {
       name, about, avatar, email,
@@ -31,16 +29,12 @@ const createUser = async (req, res) => {
     return res.status(CodeSuccess.CREATED).json(user);
   } catch (err) {
     if (err.code === 11000) {
-      next(EmailExistsError);
+      next(err);
     }
-    if (err.name === 'ValidationError') {
-      next(BadRequestError);
-    }
-    next(ServerError);
   }
 };
 
-const getUser = async (req, res) => {
+const getUser = async (req, res, next) => {
   try {
     const { userId } = req.params;
     const user = await User.findById(userId);
@@ -56,7 +50,7 @@ const getUser = async (req, res) => {
   }
 };
 
-const updateUserProfile = async (req, res) => {
+const updateUserProfile = async (req, res, next) => {
   try {
     const { name, about } = req.body;
     await User.findByIdAndUpdate(req.user._id, { name, about }, { new: true });
@@ -69,7 +63,7 @@ const updateUserProfile = async (req, res) => {
   }
 };
 
-const updateUserAvatar = async (req, res) => {
+const updateUserAvatar = async (req, res, next) => {
   try {
     const { avatar } = req.body;
     await User.findByIdAndUpdate(req.user._id, { avatar }, { new: true });
@@ -82,7 +76,7 @@ const updateUserAvatar = async (req, res) => {
   }
 };
 
-const login = async (req, res) => {
+const login = async (req, res, next) => {
   try {
     const { email, password } = req.body;
     await User.findUserByCredentials(email, password).select('+password');
@@ -90,11 +84,11 @@ const login = async (req, res) => {
     res.cookie('jwt', 'token', { maxAge: 3600000 * 24 * 7, httpOnly: true });
     return token;
   } catch (err) {
-    next(UnauthorizedError);
+    next(err);
   }
 };
 
-const getUserInfo = async (req) => {
+const getUserInfo = async (req, res, next) => {
   try {
     const user = await User.findOne({ _id: req.user._id });
     return user;

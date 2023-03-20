@@ -7,7 +7,7 @@ const { BadRequestError } = require('../errors/BadRequestError');
 const { NotFoundError } = require('../errors/NotFoundError');
 const { ServerError } = require('../errors/ServerError');
 
-const getCards = async (req, res) => {
+const getCards = async (req, res, next) => {
   try {
     const cards = await Card.find({});
     return res.json(cards);
@@ -16,7 +16,7 @@ const getCards = async (req, res) => {
   }
 };
 
-const createCard = async (req, res) => {
+const createCard = async (req, res, next) => {
   try {
     const owner = req.user._id;
     const { name, link } = req.body;
@@ -30,7 +30,7 @@ const createCard = async (req, res) => {
   }
 };
 
-const deleteCard = async (req, res) => {
+const deleteCard = async (req, res, next) => {
   const { cardId } = req.params;
   try {
     if (req.user._id) {
@@ -48,7 +48,7 @@ const deleteCard = async (req, res) => {
   }
 };
 
-const updateLike = async (req, res, method) => {
+const updateLike = async (req, res, next, method) => {
   try {
     const { cardId } = req.params;
     const card = await Card.findByIdAndUpdate(
