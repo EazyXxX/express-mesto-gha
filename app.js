@@ -1,8 +1,11 @@
 /* eslint-disable no-unused-vars */
 const express = require('express');
 const mongoose = require('mongoose');
+const router = require('express').Router();
 const bodyParser = require('body-parser');
 const { errors } = require('celebrate');
+const helmet = require('helmet');
+const cors = require('cors');
 const { CodeError } = require('./statusCode');
 const users = require('./routes/users');
 const cards = require('./routes/cards');
@@ -15,7 +18,10 @@ const app = express();
 
 const PORT = 3000;
 
+app.use(helmet());
+app.use(cors({ origin: 'http://localhost:3000' }));
 app.use(bodyParser.json());
+app.use(bodyParser.urlencoded({ extended: true }));
 
 app.post('/signin', login);
 app.post('/signup', createUser);

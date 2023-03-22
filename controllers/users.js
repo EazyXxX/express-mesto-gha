@@ -1,100 +1,109 @@
-/* eslint-disable no-undef */
-/* eslint-disable consistent-return */
 const bcrypt = require('bcryptjs');
-const jwt = require('jsonwebtoken');
+const jsonwebtoken = require('jsonwebtoken');
 const User = require('../models/user');
 const { CodeSuccess } = require('../statusCode');
 const { BadRequestError } = require('../errors/BadRequestError');
 const { NotFoundError } = require('../errors/NotFoundError');
 const { ServerError } = require('../errors/ServerError');
+const { EmailExistsError } = require('../errors/EmailExistsError');
+const { UnauthorizedError } = require('../errors/UnauthorizedError');
+const { JWT_SECRET } = require('../config');
 
-const getUsers = async (req, res) => {
-  try {
-    const users = await User.find({});
-    return res.json(users);
-  } catch (err) {
-    next(ServerError);
-  }
+const getUsers = async (req, res, next) => {
+  User.find({})
+    .then((users) => res.send(users))
+    .catch(next);
 };
 
-const createUser = async (req, res, next) => {
-  try {
-    const {
-      name, about, avatar, email,
-    } = req.body;
-    const hash = await bcrypt.hash(req.body.password, 10);
-    const user = await User.create({
+const createUser = (req, res, next) => {
+  const {
+    name, about, avatar, email, password,
+  } = req.body;
+  bcrypt.hash(password, 10)
+    .then((hash) => User.create({
       name, about, avatar, email, password: hash,
+    }))
+    .then((user) => res.status(CodeSuccess.CREATED).send(user))
+    .catch((err) => {
+      if (err.code === 11000) {
+        res.status(EmailExistsError.statusCode).send({ message: EmailExistsError.message });
+      } else {
+        next(BadRequestError);
+      }
     });
-    return res.status(CodeSuccess.CREATED).json(user);
-  } catch (err) {
-    if (err.code === 11000) {
-      next(err);
-    }
-  }
 };
 
 const getUser = async (req, res, next) => {
-  try {
-    const { userId } = req.params;
-    const user = await User.findById(userId);
-    if (user === null) {
-      next(NotFoundError);
-    }
-    return res.json(user);
-  } catch (err) {
-    if (err.name === 'CastError') {
-      next(BadRequestError);
-    }
-    next(ServerError);
+  // проверяем токен
+  const { authorization } = req.headers;
+  if (!authorization || !authorization.startsWith('Bearer')) {
+    res.status(UnauthorizedError.statusCode).send({ message: UnauthorizedError.message });
   }
+
+  let payload;
+  const jwt = authorization.replace('Bearer ', '');
+  try {
+    payload = jsonwebtoken.verify(jwt, JWT_SECRET);
+  } catch (err) {
+    res.status(UnauthorizedError.statusCode).send({ message: UnauthorizedError.message });
+  }
+  // достаём юзера из ДБшки
+  User
+    .findById(payload._id)
+    .orFail(() => res.status(NotFoundError.statusCode).send({ message: NotFoundError.message }))
+    .then((user) => res.send(user))
+    .catch(next);
 };
 
-const updateUserProfile = async (req, res, next) => {
-  try {
-    const { name, about } = req.body;
-    await User.findByIdAndUpdate(req.user._id, { name, about }, { new: true });
-    return res.json({ name, about });
-  } catch (err) {
-    if (err.name === 'ValidationError') {
-      next(BadRequestError);
-    }
-    next(ServerError);
-  }
+const updateUserProfile = (req, res, next) => {
+  const { name, about } = req.body;
+  User.findByIdAndUpdate(req.user._id, { name, about }, { new: true })
+    .then((user) => res.send(user))
+    .catch((err) => {
+      if (err.name === 'ValidationError') {
+        res.status(BadRequestError.statusCode).send({ message: BadRequestError.message });
+      } else {
+        next(err);
+      }
+    });
 };
 
-const updateUserAvatar = async (req, res, next) => {
-  try {
-    const { avatar } = req.body;
-    await User.findByIdAndUpdate(req.user._id, { avatar }, { new: true });
-    return res.json({ avatar });
-  } catch (err) {
-    if (err.name === 'ValidationError') {
-      next(BadRequestError);
-    }
-    next(ServerError);
-  }
+const updateUserAvatar = (req, res, next) => {
+  const { avatar } = req.body;
+  User.findByIdAndUpdate(req.user._id, { avatar }, { new: true })
+    .then((user) => res.send(user))
+    .catch((err) => {
+      if (err.name === 'ValidationError') {
+        res.status(BadRequestError.statusCode).send({ message: BadRequestError.message });
+      } else {
+        next(ServerError);
+      }
+    });
 };
 
 const login = async (req, res, next) => {
-  try {
-    const { email, password } = req.body;
-    await User.findUserByCredentials(email, password).select('+password');
-    const token = jwt.sign({ _id: 'd285e3dceed844f902650f40' }, '1hf8r041jf5f2hf7j0fbv6zx2', { expiresIn: '7d' });
-    res.cookie('jwt', 'token', { maxAge: 3600000 * 24 * 7, httpOnly: true });
-    return token;
-  } catch (err) {
-    next(err);
-  }
+  const { email, password } = req.body;
+  User
+    .findOne({ username: email }).select('+password')
+    .orFail(() => res.status(NotFoundError).send({ message: NotFoundError.message }))
+    .then((user) => bcrypt.compare(password, user.password).then((matched) => {
+      if (matched) {
+        return user;
+      }
+      return res.status(NotFoundError.statusCode).send({ message: NotFoundError.message });
+    }))
+    .then((user) => {
+      const jwt = jsonwebtoken.sign({ _id: user._id }, JWT_SECRET, { expiresIn: '7d' });
+      res.cookie('jwt', 'token', { maxAge: 3600000 * 24 * 7, httpOnly: true });
+      res.send({ user, jwt });
+    })
+    .catch(next);
 };
 
-const getUserInfo = async (req, res, next) => {
-  try {
-    const user = await User.findOne({ _id: req.user._id });
-    return user;
-  } catch (err) {
-    next(NotFoundError);
-  }
+const getUserInfo = (req, res, next) => {
+  User.findOne({ _id: req.user._id })
+    .then((user) => res.send(user))
+    .catch(next);
 };
 
 module.exports = {

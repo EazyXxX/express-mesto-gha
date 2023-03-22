@@ -1,71 +1,69 @@
-/* eslint-disable no-undef */
-/* eslint-disable consistent-return */
-/* eslint-disable no-shadow */
 const Card = require('../models/card');
 const { CodeSuccess } = require('../statusCode');
 const { BadRequestError } = require('../errors/BadRequestError');
 const { NotFoundError } = require('../errors/NotFoundError');
 const { ServerError } = require('../errors/ServerError');
 
-const getCards = async (req, res, next) => {
-  try {
-    const cards = await Card.find({});
-    return res.json(cards);
-  } catch (err) {
-    next(ServerError);
-  }
+const getCards = (req, res, next) => {
+  Card.find({})
+    .then((cards) => { res.send(cards); })
+    .catch(next);
 };
 
-const createCard = async (req, res, next) => {
-  try {
-    const owner = req.user._id;
-    const { name, link } = req.body;
-    const card = await Card.create({ name, link, owner });
-    return res.status(CodeSuccess.CREATED).json(card);
-  } catch (err) {
-    if (err.name === 'ValidationError') {
-      next(BadRequestError);
-    }
-    next(ServerError);
-  }
-};
-
-const deleteCard = async (req, res, next) => {
-  const { cardId } = req.params;
-  try {
-    if (req.user._id) {
-      if (await Card.findById(cardId) === null) {
-        next(NotFoundError);
+const createCard = (req, res, next) => {
+  const owner = req.user._id;
+  const { name, link } = req.body;
+  Card.create({ name, link, owner })
+    .then((card) => { res.status(CodeSuccess.CREATED).send(card); })
+    .catch((err) => {
+      if (err.name === 'ValidationError') {
+        res.status(BadRequestError.statusCode).send({ message: BadRequestError.message });
+      } else {
+        next(err);
       }
-      await Card.findByIdAndRemove(cardId);
-      return res.send({ message: `Карточка ${cardId} удалена` });
-    }
-  } catch (err) {
-    if (err.name === 'CastError') {
-      next(BadRequestError);
-    }
-    next(ServerError);
+    });
+};
+
+const deleteCard = (req, res, next) => {
+  const { cardId } = req.params;
+  if (req.user._id) {
+    Card.findById(cardId)
+      .then((card) => card.json())
+      .then(() => res.status(NotFoundError.statusCode)
+        .send({ message: NotFoundError.message }));
+    Card.findByIdAndRemove(cardId)
+      .then(() => res.send({ message: `Карточка ${cardId} удалена` }))
+      .catch((err) => {
+        if (err.name === 'CastError') {
+          res.status(BadRequestError.statusCode).send({ message: BadRequestError.message });
+        } else {
+          next(err);
+        }
+      });
   }
 };
 
-const updateLike = async (req, res, next, method) => {
-  try {
-    const { cardId } = req.params;
-    const card = await Card.findByIdAndUpdate(
-      cardId,
-      { [method]: { likes: req.user._id } },
-      { new: true },
-    );
-    if (card === null) {
-      next(NotFoundError);
-    }
-    return res.send({ likes: card.likes });
-  } catch (err) {
-    if (err.name === 'CastError') {
-      next(BadRequestError);
-    }
-    next(ServerError);
-  }
+const updateLike = (req, res, next, method) => {
+  const { cardId } = req.params;
+  Card.findByIdAndUpdate(
+    cardId,
+    { [method]: { likes: req.user._id } },
+    { new: true },
+  )
+    .then((card) => {
+      if (card === null) {
+        res.status(NotFoundError.statusCode).send({ message: NotFoundError.message });
+      } else {
+        res.send({ likes: card.likes });
+      }
+    })
+    .catch((err) => {
+      if (err.name === 'CastError') {
+        res.status(BadRequestError.statusCode).send({ message: BadRequestError.message });
+      } else {
+        next(ServerError);
+      }
+    });
 };
 
 const likeCard = (req, res) => updateLike(req, res, '$addToSet');
