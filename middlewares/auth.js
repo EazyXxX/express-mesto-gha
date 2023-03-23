@@ -1,22 +1,28 @@
-/* eslint-disable consistent-return */
 const jwt = require('jsonwebtoken');
+const { JWT_SECRET } = require('../config');
 
-const authMiddleware = async (req, res, next) => {
+const authMiddleware = (err, req, res, next) => {
   const { authorization } = req.headers;
+  const statusCode = err.statusCode || 500;
+
+  const message = statusCode === 500
+    ? `На сервере произошла ошибка: ${err.message}`
+    : err.message;
+
+  res.status(statusCode).send({ message });
 
   if (!authorization || !authorization.startsWith('Bearer ')) {
-    return res.status(401).send({ message: 'Необходима авторизация' });
+    res.status(401).send({ message: 'Необходима авторизация' });
   }
 
   const token = authorization.replace('Bearer ', '');
   let payload;
 
-  try {
-    // попытаемся верифицировать токен
-    payload = await jwt.verify(token, '1hf8r041jf5f2hf7j0fbv6zx2');
-  } catch (err) {
-    next(err);
-  }
+  // попытаемся верифицировать токен
+  jwt.verify(token, JWT_SECRET)
+    .catch((e) => {
+      next(e);
+    });
   req.user = payload;
   next();
 };

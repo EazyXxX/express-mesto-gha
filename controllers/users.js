@@ -1,3 +1,4 @@
+/* eslint-disable no-unused-vars */
 const bcrypt = require('bcryptjs');
 const jsonwebtoken = require('jsonwebtoken');
 const User = require('../models/user');
@@ -15,25 +16,7 @@ const getUsers = async (req, res, next) => {
     .catch(next);
 };
 
-const createUser = (req, res, next) => {
-  const {
-    name, about, avatar, email, password,
-  } = req.body;
-  bcrypt.hash(password, 10)
-    .then((hash) => User.create({
-      name, about, avatar, email, password: hash,
-    }))
-    .then((user) => res.status(CodeSuccess.CREATED).send(user))
-    .catch((err) => {
-      if (err.code === 11000) {
-        res.status(EmailExistsError.statusCode).send({ message: EmailExistsError.message });
-      } else {
-        next(BadRequestError);
-      }
-    });
-};
-
-const getUser = async (req, res, next) => {
+const getUser = (req, res, next) => {
   // проверяем токен
   const { authorization } = req.headers;
   if (!authorization || !authorization.startsWith('Bearer')) {
@@ -81,6 +64,26 @@ const updateUserAvatar = (req, res, next) => {
     });
 };
 
+const register = async (req, res) => {
+  try {
+    const hash = await bcrypt.hash(req.body.password, 10);
+    const {
+      name, about, avatar, email,
+    } = req.body;
+    const user = await User.create({
+      name, about, avatar, email, password: hash,
+    });
+    return res.status(CodeSuccess.CREATED).json(user);
+  } catch (e) {
+    if (e.name === 'ValidationError') {
+      console.error(e);
+      return res.status(401).send({ message: 'Переданы некорректные данные при создании.' });
+    }
+    console.error(e);
+    return res.status(500).send({ message: 'Произошла ошибка при попытке создать пользователя.' });
+  }
+};
+
 const login = async (req, res, next) => {
   const { email, password } = req.body;
   User
@@ -107,5 +110,5 @@ const getUserInfo = (req, res, next) => {
 };
 
 module.exports = {
-  createUser, getUser, getUsers, updateUserProfile, updateUserAvatar, login, getUserInfo,
+  register, getUser, getUsers, updateUserProfile, updateUserAvatar, login, getUserInfo,
 };
