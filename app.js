@@ -16,6 +16,15 @@ mongoose.set('strictQuery', false);
 const app = express();
 const PORT = 3000;
 
+mongoose.set('runValidators', true);
+mongoose.connect('mongodb://localhost:27017/mestodb', {
+  useNewUrlParser: true,
+  useUnifiedTopology: true,
+  useCreateIndex: true,
+}, () => {
+  console.log('Подключено к MongoDB');
+});
+
 app.use(helmet());
 app.use(cors({ origin: 'http://localhost:3000' }));
 app.use(bodyParser.json());
@@ -37,10 +46,4 @@ app.use((err, req, res, next) => {
   res.status(err.statusCode).send({ message: err.message });
 });
 
-mongoose.set('runValidators', true);
-mongoose.connect('mongodb://localhost:27017/mestodb', {
-  useNewUrlParser: true,
-}, () => {
-  console.log('Подключено к MongoDB');
-  app.listen(PORT, (error) => (error ? console.error(error) : console.log(`App listening on port ${PORT}`)));
-});
+app.listen(PORT, (error) => (error ? console.error(error) : console.log(`App listening on port ${PORT}`)));
