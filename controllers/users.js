@@ -64,7 +64,7 @@ const updateUserAvatar = (req, res, next) => {
     });
 };
 
-const register = async (req, res) => {
+const signup = async (req, res) => {
   try {
     const password = await bcrypt.hash(req.body.password, 10);
     const {
@@ -84,7 +84,7 @@ const register = async (req, res) => {
   }
 };
 
-const login = async (req, res, next) => {
+const signin = async (req, res, next) => {
   const { email, password } = req.body;
   User
     .findOne({ username: email }).select('+password')
@@ -110,5 +110,5 @@ const getUserInfo = (req, res, next) => {
 };
 
 module.exports = {
-  register, getUser, getUsers, updateUserProfile, updateUserAvatar, login, getUserInfo,
+  signup, getUser, getUsers, updateUserProfile, updateUserAvatar, signin, getUserInfo,
 };

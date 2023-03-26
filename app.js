@@ -5,9 +5,10 @@ const bodyParser = require('body-parser');
 const { errors } = require('celebrate');
 const helmet = require('helmet');
 const cors = require('cors');
+const { celebrate, Joi } = require('celebrate');
 const users = require('./routes/users');
 const cards = require('./routes/cards');
-const { login, register } = require('./controllers/users');
+const { signin, signup } = require('./controllers/users');
 const authMiddleware = require('./middlewares/auth');
 const User = require('./models/user');
 
@@ -30,8 +31,23 @@ app.use(cors({ origin: 'http://localhost:3000' }));
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: true }));
 
-app.post('/login', login);
-app.post('/register', register);
+app.post('/signin', celebrate({
+  body: Joi.object().keys({
+    email: Joi.string().required().min(2).max(30),
+    name: Joi.string().min(2).max(30),
+    about: Joi.string().min(2).max(30),
+    password: Joi.string().required().min(2).max(30),
+  }),
+}), signin);
+app.post('/signup', celebrate({
+  body: Joi.object().keys({
+    email: Joi.string().email.required().min(2).max(30),
+    name: Joi.string().min(2).max(30),
+    about: Joi.string().min(2).max(30),
+    password: Joi.string().required().min(2).max(30),
+
+  }),
+}), signup);
 
 app.use(authMiddleware);
 
