@@ -66,12 +66,12 @@ const updateUserAvatar = (req, res, next) => {
 
 const signup = async (req, res) => {
   try {
-    const hash = await bcrypt.hash(req.body.password, 10);
     const {
-      name, about, avatar, email,
+      name, about, avatar, email, password,
     } = req.body;
+    const hash = await bcrypt.hash(req.body.password, 10);
     const user = await User.create({
-      name, about, avatar, email, password: hash,
+      name, about, avatar, email, password,
     });
     return res.status(CodeSuccess.CREATED).json(user);
   } catch (e) {
