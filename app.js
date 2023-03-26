@@ -33,7 +33,7 @@ app.use(bodyParser.urlencoded({ extended: true }));
 
 app.post('/signin', celebrate({
   body: Joi.object().keys({
-    email: Joi.string().required().min(2).max(30),
+    email: Joi.string().email().required(),
     name: Joi.string().min(2).max(30),
     about: Joi.string().min(2).max(30),
     password: Joi.string().required().min(2).max(30),
@@ -41,7 +41,7 @@ app.post('/signin', celebrate({
 }), signin);
 app.post('/signup', celebrate({
   body: Joi.object().keys({
-    email: Joi.string().required().min(2).max(30),
+    email: Joi.string().email().required(),
     name: Joi.string().min(2).max(30),
     about: Joi.string().min(2).max(30),
     password: Joi.string().required().min(2).max(30),
