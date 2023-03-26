@@ -66,12 +66,12 @@ const updateUserAvatar = (req, res, next) => {
 
 const register = async (req, res) => {
   try {
-    const hash = await bcrypt.hash(req.body.password, 10);
+    const password = await bcrypt.hash(req.body.password, 10);
     const {
       name, about, avatar, email,
     } = req.body;
     const user = await User.create({
-      name, about, avatar, email, password: hash,
+      name, about, avatar, email, password,
     });
     return res.status(CodeSuccess.CREATED).json(user);
   } catch (e) {

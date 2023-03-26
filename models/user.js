@@ -5,12 +5,14 @@ const { isEmail, isURL } = require('validator');
 const userSchema = new mongoose.Schema({
   name: {
     type: String,
+    required: true,
     minlength: [2, 'Имя должно быть больше двух символов'],
     maxlength: [30, 'Имя должно быть меньше 30 символов'],
     default: 'Жак-Ив Кусто',
   },
   about: {
     type: String,
+    required: true,
     minlength: [2, 'Описание должно быть больше 2 символов'],
     maxlength: [30, 'Описание должно быть меньше 30 символов'],
     default: 'Исследователь',
