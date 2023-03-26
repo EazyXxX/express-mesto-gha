@@ -80,8 +80,6 @@ const signup = async (req, res) => {
       console.error(e);
       return res.status(401).send({ message: 'Переданы некорректные данные при создании.' });
     }
-    await User.findOne({ email: req.body.email })
-      .then(() => res.status(EmailExistsError.statusCode).send({ message: EmailExistsError.message }));
     console.error(e);
     return res.status(500).send({ message: 'Произошла ошибка при попытке создать пользователя.' });
   }
