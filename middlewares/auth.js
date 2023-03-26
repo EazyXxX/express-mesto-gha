@@ -9,13 +9,14 @@ const authMiddleware = (err, req, res, next) => {
     ? `На сервере произошла ошибка: ${err.message}`
     : err.message;
 
-  res.status(statusCode).send({ message });
-
   if (!authorization || !authorization.startsWith('Bearer ')) {
     res.status(401).send({ message: 'Необходима авторизация' });
   }
 
   const token = authorization.replace('Bearer ', '');
+
+  res.status(statusCode).send({ message });
+
   let payload;
 
   // попытаемся верифицировать токен
