@@ -31,12 +31,6 @@ app.use(cors({ origin: 'http://localhost:3000' }));
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: true }));
 
-app.post('/signin', celebrate({
-  body: Joi.object().keys({
-    email: Joi.string().email().required(),
-    password: Joi.string().required().min(2).max(30),
-  }),
-}), signin);
 app.post('/signup', celebrate({
   body: Joi.object().keys({
     email: Joi.string().email().required(),
@@ -46,6 +40,13 @@ app.post('/signup', celebrate({
     avatar: Joi.string().pattern(/(https?:\/\/)(w{3}\.)?(((\d{1,3}\.){3}\d{1,3})|((\w-?)+\.(ru|com)))(:\d{2,5})?((\/.+)+)?\/?#?/),
   }),
 }), signup);
+app.post('/signin', celebrate({
+  body: Joi.object().keys({
+    email: Joi.string().email().required(),
+    password: Joi.string().required().min(2).max(30),
+    _id: Joi.string().required(),
+  }),
+}), signin);
 
 app.use('/users', users);
 app.use('/cards', cards);

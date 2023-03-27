@@ -72,7 +72,7 @@ const signup = async (req, res) => {
     } = req.body;
     const hash = await bcrypt.hash(password, 10);
     const user = await User.create({
-      name, about, avatar, email, password,
+      name, about, avatar, email, password: hash,
     });
     return res.status(CodeSuccess.CREATED).json(user);
   } catch (e) {
@@ -87,29 +87,36 @@ const signup = async (req, res) => {
   }
 };
 
-const signin = async (req, res, next) => {
-  const { identifier, password } = req.body;
-  User
-    .findOne({ username: identifier })
-    .orFail(() => res.status(NotFoundError.statusCode).send({ message: NotFoundError.message }))
-    .then((user) => bcrypt.compare(password, user.password).then((matched) => {
-      if (matched) {
-        return user;
-      }
-      return res.status(NotFoundError.statusCode).send({ message: NotFoundError.message });
-    }))
-    .then((user) => {
-      const jwt = jsonwebtoken.sign({ _id: user._id }, JWT_SECRET, { expiresIn: '7d' });
-      res.cookie('jwt', 'token', { maxAge: 3600000 * 24 * 7, httpOnly: true });
-      res.send({ user, jwt });
-    })
-    .catch((e) => {
-      if (e.name === 'ValidationError') {
-        res.status(UnauthorizedError.statusCode).send({ message: UnauthorizedError.message });
-      } else {
-        next(ServerError);
-      }
-    });
+const signin = async (req, res) => {
+  try {
+    const { email, password } = req.body;
+
+    const user = await User.findOne({ email }).select('+password');
+    console.log(user);
+    if (user === null) {
+      return res.status(401).send({ message: 'Неправильные почта или пароль.' });
+    }
+    const matched = await bcrypt.compare(password, user.password);
+
+    if (!matched) {
+      // хеши не совпали — отклоняем промис
+      return res.status(401).send({ message: 'Неправильные почта или пароль.' });
+    }
+
+    const token = jsonwebtoken.sign(
+      { _id: user._id },
+      'some-secret-key',
+      { expiresIn: '7d' },
+    );
+    return res.send({ token });
+  } catch (e) {
+    if (e.name === 'ValidationError') {
+      console.error(e);
+      return res.status(400).send({ message: 'Переданы некорректные данные при создании.' });
+    }
+    console.error(e);
+    return res.status(500).send({ message: 'Произошла ошибка при попытке создать пользователя.' });
+  }
 };
 
 const getUserInfo = (req, res, next) => {
