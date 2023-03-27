@@ -53,7 +53,6 @@ app.use('/users', users);
 app.use('/cards', cards);
 
 app.use(errors());
-
 app.use((err, req, res, next) => {
   console.error(err);
   res.status(err.statusCode).send({ message: err.message });
