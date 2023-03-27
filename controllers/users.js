@@ -78,10 +78,13 @@ const signup = async (req, res) => {
   } catch (e) {
     if (e.name === 'ValidationError') {
       console.error(e);
-      return res.status(401).send({ message: 'Переданы некорректные данные при создании.' });
+      return res.status(UnauthorizedError.statusCode).send({ message: UnauthorizedError.message });
+    }
+    if (e.code === 11000) {
+      res.status(EmailExistsError.statusCode).send({ message: EmailExistsError.message });
     }
     console.error(e);
-    return res.status(500).send({ message: 'Произошла ошибка при попытке создать пользователя.' });
+    return res.status(ServerError.statusCode).send({ message: ServerError.message });
   }
 };
 
@@ -99,9 +102,15 @@ const signin = async (req, res, next) => {
     .then((user) => {
       const jwt = jsonwebtoken.sign({ _id: user._id }, JWT_SECRET, { expiresIn: '7d' });
       res.cookie('jwt', 'token', { maxAge: 3600000 * 24 * 7, httpOnly: true });
-      res.send({ user, jwt });
+      res.json({ user, jwt });
     })
-    .catch(next);
+    .catch((e) => {
+      if (e.name === 'ValidationError') {
+        res.status(UnauthorizedError.statusCode).send({ message: UnauthorizedError.message });
+      } else {
+        next(ServerError);
+      }
+    });
 };
 
 const getUserInfo = (req, res, next) => {

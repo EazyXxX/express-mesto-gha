@@ -23,7 +23,7 @@ mongoose.connect('mongodb://127.0.0.1:27017/mestodb', {
   useNewUrlParser: true,
   useUnifiedTopology: true,
 }, (err) => {
-  if (err) { console.log(err); } else console.log('mongdb is connected');
+  if (err) { console.log(err); } else console.log('MongoDB is connected');
 });
 
 app.use(helmet());
