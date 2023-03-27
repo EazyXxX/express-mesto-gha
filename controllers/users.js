@@ -7,7 +7,7 @@ const { CodeSuccess } = require('../statusCode');
 const { BadRequestError } = require('../errors/BadRequestError');
 const { NotFoundError } = require('../errors/NotFoundError');
 const { ServerError } = require('../errors/ServerError');
-const { EmailExistsError } = require('../errors/EmailExistsError');
+const EmailExistsError = require('../errors/EmailExistsError');
 const { UnauthorizedError } = require('../errors/UnauthorizedError');
 const { JWT_SECRET } = require('../config');
 
@@ -79,9 +79,8 @@ const signup = async (req, res) => {
     if (e.name === 'ValidationError') {
       console.error(e);
       return res.status(UnauthorizedError.statusCode).send({ message: UnauthorizedError.message });
-    }
-    if (e.code === 11000) {
-      res.status(EmailExistsError.statusCode).send({ message: EmailExistsError.message });
+    } if (e.code === 11000) {
+      return res.status(409).send({ message: 'Пользователь с такими данными уже существует' });
     }
     console.error(e);
     return res.status(ServerError.statusCode).send({ message: ServerError.message });
