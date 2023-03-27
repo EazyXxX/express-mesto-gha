@@ -102,7 +102,7 @@ const signin = async (req, res, next) => {
     .then((user) => {
       const jwt = jsonwebtoken.sign({ _id: user._id }, JWT_SECRET, { expiresIn: '7d' });
       res.cookie('jwt', 'token', { maxAge: 3600000 * 24 * 7, httpOnly: true });
-      res.json({ user, jwt });
+      res.send({ user, jwt });
     })
     .catch((e) => {
       if (e.name === 'ValidationError') {
