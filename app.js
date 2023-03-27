@@ -47,8 +47,6 @@ app.post('/signup', celebrate({
   }),
 }), signup);
 
-app.use(authMiddleware);
-
 app.use('/users', users);
 app.use('/cards', cards);
 

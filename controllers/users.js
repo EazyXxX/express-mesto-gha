@@ -72,13 +72,13 @@ const signup = async (req, res) => {
     } = req.body;
     const hash = await bcrypt.hash(password, 10);
     const user = await User.create({
-      name, about, avatar, email, password: hash,
+      name, about, avatar, email, password,
     });
     return res.status(CodeSuccess.CREATED).json(user);
   } catch (e) {
     if (e.name === 'ValidationError') {
       console.error(e);
-      return res.status(UnauthorizedError.statusCode).send({ message: UnauthorizedError.message });
+      return res.status(401).send({ message: 'Необходима авторизация' });
     } if (e.code === 11000) {
       return res.status(409).send({ message: 'Пользователь с такими данными уже существует' });
     }
@@ -88,10 +88,10 @@ const signup = async (req, res) => {
 };
 
 const signin = async (req, res, next) => {
-  const { email, password } = req.body;
+  const { identifier, password } = req.body;
   User
-    .findOne({ username: email }).select('+password')
-    .orFail(() => res.status(NotFoundError).send({ message: NotFoundError.message }))
+    .findOne({ username: identifier })
+    .orFail(() => res.status(NotFoundError.statusCode).send({ message: NotFoundError.message }))
     .then((user) => bcrypt.compare(password, user.password).then((matched) => {
       if (matched) {
         return user;
