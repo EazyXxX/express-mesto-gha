@@ -6,12 +6,7 @@ const {
 } = require('../controllers/users');
 
 users.get('/', getUsers);
-users.get('/:userId', celebrate({
-  body: Joi.object().keys({
-    title: Joi.string().required().min(2).max(30),
-    text: Joi.string().required().min(2),
-  }),
-}), getUser);
+users.get('/:userId', getUser);
 users.patch('/me', celebrate({
   body: Joi.object().keys({
     title: Joi.string().required().min(2).max(30),
