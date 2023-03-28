@@ -7,7 +7,7 @@ const { CodeSuccess } = require('../statusCode');
 const { BadRequestError } = require('../errors/BadRequestError');
 const { NotFoundError } = require('../errors/NotFoundError');
 const { ServerError } = require('../errors/ServerError');
-const EmailExistsError = require('../errors/EmailExistsError');
+const { EmailExistsError } = require('../errors/EmailExistsError');
 const { UnauthorizedError } = require('../errors/UnauthorizedError');
 const { JWT_SECRET } = require('../config');
 
@@ -15,6 +15,37 @@ const getUsers = async (req, res, next) => {
   User.find({})
     .then((users) => res.send(users))
     .catch(next);
+};
+
+const updateUserProfile = (req, res, next) => {
+  const { name, about } = req.body;
+  const { authorization } = req.headers;
+  if (!authorization || !authorization.startsWith('Bearer')) {
+    res.status(UnauthorizedError.statusCode).send({ message: UnauthorizedError.message });
+  }
+
+  let payload;
+  const jwt = authorization.replace('Bearer ', '');
+  try {
+    payload = jsonwebtoken.verify(jwt, JWT_SECRET);
+  } catch (err) {
+    res.status(UnauthorizedError.statusCode).send({ message: UnauthorizedError.message });
+  }
+  // достаём юзера из БДшки
+  User
+    .findById(payload._id)
+    .orFail(() => res.status(NotFoundError.statusCode).send({ message: NotFoundError.message }))
+    .then((user) => {
+      User.findByIdAndUpdate(req.user._id, { name, about }, { new: true })
+        .then((users) => res.send(users));
+    })
+    .catch((err) => {
+      if (err.name === 'ValidationError') {
+        res.status(BadRequestError.statusCode).send({ message: BadRequestError.message });
+      } else {
+        next(err);
+      }
+    });
 };
 
 const getUser = (req, res, next) => {
@@ -41,23 +72,10 @@ const getUser = (req, res, next) => {
     });
 };
 
-const updateUserProfile = (req, res, next) => {
-  const { name, about } = req.body;
-  User.findByIdAndUpdate(req.user._id, { name, about }, { new: true })
-    .then((user) => res.send(user))
-    .catch((err) => {
-      if (err.name === 'ValidationError') {
-        res.status(BadRequestError.statusCode).send({ message: BadRequestError.message });
-      } else {
-        next(err);
-      }
-    });
-};
-
 const updateUserAvatar = (req, res, next) => {
   const { avatar } = req.body;
   User.findByIdAndUpdate(req.user._id, { avatar }, { new: true })
-    .then((user) => res.send(user))
+    .then(() => res.send(avatar))
     .catch((err) => {
       if (err.name === 'ValidationError') {
         res.status(BadRequestError.statusCode).send({ message: BadRequestError.message });
