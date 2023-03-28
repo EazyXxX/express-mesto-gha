@@ -2,7 +2,7 @@
 const jwt = require('jsonwebtoken');
 const { JWT_SECRET } = require('../config');
 
-const authMiddleware = async (req, res, next) => {
+const authMiddleware = (req, res, next) => {
   const { authorization } = req.headers;
 
   if (!authorization || !authorization.startsWith('Bearer')) {
@@ -14,9 +14,9 @@ const authMiddleware = async (req, res, next) => {
 
   try {
     // попытаемся верифицировать токен
-    payload = await jwt.verify(token, JWT_SECRET);
+    payload = jwt.verify(token, JWT_SECRET);
   } catch (err) {
-    next(err);
+    return res.status(401).send({ message: 'Необходима авторизация' });
   }
   req.user = payload;
   next();

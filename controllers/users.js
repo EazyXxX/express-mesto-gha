@@ -105,7 +105,7 @@ const signin = async (req, res) => {
 
     const token = jsonwebtoken.sign(
       { _id: user._id },
-      'some-secret-key',
+      JWT_SECRET,
       { expiresIn: '7d' },
     );
     return res.send({ token });
