@@ -35,14 +35,10 @@ const getUser = (req, res, next) => {
   User
     .findById(payload._id)
     .orFail(() => res.status(NotFoundError.statusCode).send({ message: NotFoundError.message }))
-    .then((user) => {
-      if (req.params.userId === String(user._id).slice(0, 39)) {
-        res.send(user);
-      } else {
-        res.status(400).send({ message: 'Неправильный id пользователя' });
-      }
-    })
-    .catch(next);
+    .then((user) => res.send(user))
+    .catch(() => {
+      res.status(NotFoundError.statusCode).send({ message: NotFoundError.message });
+    });
 };
 
 const updateUserProfile = (req, res, next) => {
