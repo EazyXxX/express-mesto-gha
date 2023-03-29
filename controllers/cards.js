@@ -17,7 +17,7 @@ const createCard = (req, res, next) => {
     .then((card) => { res.status(CodeSuccess.CREATED).send(card); })
     .catch((err) => {
       if (err.name === 'ValidationError') {
-        res.status(BadRequestError.statusCode).send({ message: BadRequestError.message });
+        res.status(401).send({ message: 'В запросе указаны неправильные данные' });
       } else {
         next(err);
       }
