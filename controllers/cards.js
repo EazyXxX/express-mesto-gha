@@ -59,7 +59,7 @@ const updateLike = (req, res, next, method) => {
     })
     .catch((err) => {
       if (err.name === 'CastError') {
-        res.status(BadRequestError.statusCode).send({ message: BadRequestError.message });
+        res.status(400).send({ message: 'Переданы некорректные данные' });
       } else {
         next(ServerError);
       }
