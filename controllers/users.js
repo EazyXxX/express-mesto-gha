@@ -75,7 +75,7 @@ const getUser = (req, res, next) => {
 const updateUserAvatar = (req, res, next) => {
   const { avatar } = req.body;
   User.findByIdAndUpdate(req.user._id, { avatar }, { new: true })
-    .then(() => res.send(avatar))
+    .then(() => res.json(avatar))
     .catch((err) => {
       if (err.name === 'ValidationError') {
         res.status(BadRequestError.statusCode).send({ message: BadRequestError.message });

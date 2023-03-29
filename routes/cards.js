@@ -8,9 +8,9 @@ const {
 cards.get('/', getCards);
 cards.post('/', celebrate({
   body: Joi.object().keys({
-    title: Joi.string().required().min(2).max(30),
-    text: Joi.string().required().min(2),
-  }).unknown(true),
+    name: Joi.string().required().min(2).max(30),
+    link: Joi.string().pattern(/(https?:\/\/)(w{3}\.)?(((\d{1,3}\.){3}\d{1,3})|((\w-?)+\.(ru|com)))(:\d{2,5})?((\/.+)+)?\/?#?/),
+  }),
 }), createCard);
 cards.delete('/:cardId', celebrate({
   headers: Joi.object().keys({
