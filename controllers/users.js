@@ -63,17 +63,10 @@ const getUser = (req, res, next) => {
     res.status(UnauthorizedError.statusCode).send({ message: UnauthorizedError.message });
   }
   // достаём юзера из ДБшки
-  User.findById(req.params.userId)
-    .then((userFound) => {
-      if (userFound) {
-        User.findById(payload._id)
-          .orFail(() => res.status(NotFoundError.statusCode).send({ message: NotFoundError.message }))
-          .then((user) => res.send(user))
-          .catch(() => {
-            res.status(NotFoundError.statusCode).send({ message: NotFoundError.message });
-          });
-      }
-    })
+  User
+    .findById(payload._id)
+    .orFail(() => res.status(NotFoundError.statusCode).send({ message: NotFoundError.message }))
+    .then((user) => res.send(user))
     .catch(() => {
       res.status(NotFoundError.statusCode).send({ message: NotFoundError.message });
     });
