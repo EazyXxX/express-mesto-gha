@@ -16,7 +16,7 @@ cards.delete('/:cardId', celebrate({
   headers: Joi.object().keys({
     _id: Joi.string().hex().length(24),
     authorization: Joi.string(),
-  }).unknown(true),
+  }),
 }), deleteCard);
 cards.put('/:cardId/likes', celebrate({
   headers: Joi.object().keys({
