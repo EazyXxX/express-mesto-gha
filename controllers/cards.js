@@ -22,25 +22,25 @@ const createCard = (req, res, next) => {
     });
 };
 
-const deleteCard = async (req, res) => {
+const deleteCard = (req, res) => {
   const { cardId } = req.params;
-  try {
-    const card = await Card.findById(cardId);
-    if (card === null) {
-      return res.status(404).send({ message: `Карточка ${cardId} не найдена` });
-    }
-    if (req.user._id === card.owner) {
-      await Card.findByIdAndRemove(cardId);
-    }
-    return res.send({ message: `Карточка ${cardId} удалена` });
-  } catch (e) {
-    if (e.name === 'CastError') {
+  Card.findById(cardId)
+    .then((card) => {
+      if (card.owner === req.user._id) {
+        Card.findByIdAndRemove(cardId);
+        res.send({ message: `Карточка ${cardId} удалена` });
+      } else {
+        res.status(404).send({ message: 'Такой карточки нет' });
+      }
+    })
+    .catch((e) => {
+      if (e.name === 'CastError') {
+        console.error(e);
+        return res.status(400).send({ message: 'Передан некорректный id карточки' });
+      }
       console.error(e);
-      return res.status(400).send({ message: 'Передан некорректный id карточки' });
-    }
-    console.error(e);
-    return res.status(500).send({ message: `Произошла ошибка при попытке удалить карточку ${cardId}` });
-  }
+      return res.status(500).send({ message: `Произошла ошибка при попытке удалить карточку ${cardId}` });
+    });
 };
 
 const updateLike = (req, res, next, method) => {
