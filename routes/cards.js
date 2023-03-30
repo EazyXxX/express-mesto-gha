@@ -14,9 +14,18 @@ cards.post('/', celebrate({
 }), createCard);
 cards.delete('/:cardId', celebrate({
   headers: Joi.object().keys({
-  }).unknown(true),
+    _id: Joi.string().hex().length(24),
+  }),
 }), deleteCard);
-cards.put('/:cardId/likes', likeCard);
-cards.delete('/:cardId/likes', deleteLikeCard);
+cards.put('/:cardId/likes', celebrate({
+  headers: Joi.object().keys({
+    _id: Joi.string().hex().length(24),
+  }),
+}), likeCard);
+cards.delete('/:cardId/likes', celebrate({
+  headers: Joi.object().keys({
+    _id: Joi.string().hex().length(24),
+  }),
+}), deleteLikeCard);
 
 module.exports = cards;
