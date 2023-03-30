@@ -52,7 +52,7 @@ const updateLike = (req, res, next, method) => {
   )
     .then((card) => {
       if (card === null) {
-        res.status(NotFoundError.statusCode).send({ message: NotFoundError.message });
+        res.status(404).send({ message: 'Такой карточки нет' });
       } else {
         res.send({ likes: card.likes });
       }
