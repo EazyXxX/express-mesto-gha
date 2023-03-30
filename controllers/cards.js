@@ -27,8 +27,8 @@ const deleteCard = (req, res) => {
   Card.findById(cardId)
     .then((card) => {
       if (String(card.owner) === req.user._id) {
-        Card.findByIdAndRemove(cardId);
-        res.send({ message: `Карточка ${cardId} удалена` });
+        Card.findByIdAndRemove(cardId)
+          .then(() => res.send({ message: `Карточка ${cardId} удалена` }));
       } else {
         res.status(403).send({ message: 'Нельзя удалить чужую карточку' });
       }
