@@ -27,10 +27,12 @@ const deleteCard = async (req, res) => {
   try {
     const card = await Card.findById(cardId);
     if (card === null) {
-      return res.status(404).send({ message: `Карточка ${cardId} не найдена.` });
+      return res.status(404).send({ message: `Карточка ${cardId} не найдена` });
     }
-    await Card.findByIdAndRemove(cardId);
-    return res.send({ message: `Карточка ${cardId} удалена.` });
+    if (req.user._id === card.owner) {
+      await Card.findByIdAndRemove(cardId);
+    }
+    return res.send({ message: `Карточка ${cardId} удалена` });
   } catch (e) {
     if (e.name === 'CastError') {
       console.error(e);
