@@ -1,7 +1,5 @@
 const Card = require('../models/card');
 const { CodeSuccess } = require('../statusCode');
-const { BadRequestError } = require('../errors/BadRequestError');
-const { NotFoundError } = require('../errors/NotFoundError');
 const { ServerError } = require('../errors/ServerError');
 
 const getCards = (req, res, next) => {
@@ -24,20 +22,16 @@ const createCard = (req, res, next) => {
     });
 };
 
-const deleteCard = (req, res, next) => {
+const deleteCard = (req, res) => {
   const { cardId } = req.params;
   if (req.user._id) {
-    Card.findById(cardId)
-      .then((card) => card.json())
-      .then(() => res.status(NotFoundError.statusCode)
-        .send({ message: NotFoundError.message }));
     Card.findByIdAndRemove(cardId)
       .then(() => res.send({ message: `Карточка ${cardId} удалена` }))
       .catch((err) => {
         if (err.name === 'CastError') {
-          res.status(BadRequestError.statusCode).send({ message: BadRequestError.message });
+          res.status(400).send({ message: 'Переданы некорректные данные' });
         } else {
-          next(err);
+          res.status(500).send({ message: 'Ошибка на стороне сервера' });
         }
       });
   }
