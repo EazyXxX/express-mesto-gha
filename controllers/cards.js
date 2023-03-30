@@ -30,7 +30,7 @@ const deleteCard = (req, res) => {
         Card.findByIdAndRemove(cardId);
         res.send({ message: `Карточка ${cardId} удалена` });
       } else {
-        res.status(404).send({ message: 'Такой карточки нет' });
+        res.status(403).send({ message: 'Нельзя удалить чужую карточку' });
       }
     })
     .catch((e) => {
@@ -39,7 +39,7 @@ const deleteCard = (req, res) => {
         return res.status(400).send({ message: 'Передан некорректный id карточки' });
       }
       console.error(e);
-      return res.status(500).send({ message: `Произошла ошибка при попытке удалить карточку ${cardId}` });
+      return res.status(404).send({ message: `Произошла ошибка при попытке удалить карточку ${cardId}` });
     });
 };
 
