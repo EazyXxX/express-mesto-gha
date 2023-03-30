@@ -52,6 +52,8 @@ app.use(authMiddleware);
 app.use('/users', users);
 app.use('/cards', cards);
 
+app.use('*', (req, res) => res.status(404).send({ message: 'Страница не существует' }));
+
 app.use(errors());
 app.use((err, req, res, next) => {
   console.error(err);

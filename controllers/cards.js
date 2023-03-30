@@ -22,18 +22,22 @@ const createCard = (req, res, next) => {
     });
 };
 
-const deleteCard = (req, res) => {
+const deleteCard = async (req, res) => {
   const { cardId } = req.params;
-  if (req.user._id) {
-    Card.findByIdAndRemove(cardId)
-      .then(() => res.send({ message: `Карточка ${cardId} удалена` }))
-      .catch((err) => {
-        if (err.name === 'CastError') {
-          res.status(400).send({ message: 'Переданы некорректные данные' });
-        } else {
-          res.status(500).send({ message: 'Ошибка на стороне сервера' });
-        }
-      });
+  try {
+    const card = await Card.findById(cardId);
+    if (card === null) {
+      return res.status(404).send({ message: `Карточка ${cardId} не найдена.` });
+    }
+    await Card.findByIdAndRemove(cardId);
+    return res.send({ message: `Карточка ${cardId} удалена.` });
+  } catch (e) {
+    if (e.name === 'CastError') {
+      console.error(e);
+      return res.status(400).send({ message: 'Передан некорректный id карточки' });
+    }
+    console.error(e);
+    return res.status(500).send({ message: `Произошла ошибка при попытке удалить карточку ${cardId}` });
   }
 };
 
