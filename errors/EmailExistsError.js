@@ -1,8 +1,7 @@
 class EmailExistsError extends Error {
-  constructor(message) {
+  constructor(message = 'Пользователь с такими данными уже существует') {
     super(message);
     this.statusCode = 409;
-    this.message = 'Пользователь с такими данными уже существует';
   }
 }
 

@@ -1,6 +1,11 @@
+const mongoose = require('mongoose');
 const Card = require('../models/card');
 const { CodeSuccess } = require('../statusCode');
-const { ServerError } = require('../errors/ServerError');
+const BadRequestError = require('../errors/BadRequestError');
+const NotFoundError = require('../errors/NotFoundError');
+const UnauthorizedError = require('../errors/UnauthorizedError');
+const ServerError = require('../errors/ServerError');
+const ConflictError = require('../errors/ConflictError');
 
 const getCards = (req, res, next) => {
   Card.find({})
@@ -11,11 +16,15 @@ const getCards = (req, res, next) => {
 const createCard = (req, res, next) => {
   const owner = req.user._id;
   const { name, link } = req.body;
-  Card.create({ name, link, owner })
-    .then((card) => { res.status(CodeSuccess.CREATED).send(card); })
+  const newCard = new Card({ name, link, owner });
+  Card.populate(newCard, { path: 'owner' });
+  newCard.save()
+    .then((card) => {
+      res.status(CodeSuccess.CREATED).send(card);
+    })
     .catch((err) => {
-      if (err.name === 'ValidationError') {
-        res.status(401).send({ message: 'В запросе указаны неправильные данные' });
+      if (err instanceof mongoose.Error.ValidationError) {
+        res.status(UnauthorizedError.statusCode).send({ message: UnauthorizedError.message });
       } else {
         next(err);
       }
@@ -28,18 +37,19 @@ const deleteCard = (req, res) => {
     .then((card) => {
       if (String(card.owner) === req.user._id) {
         Card.findByIdAndRemove(cardId)
-          .then(() => res.send({ message: `Карточка ${cardId} удалена` }));
+          .then(() => res.send({ message: `Карточка ${cardId} удалена` }))
+          .catch(() => res.status(NotFoundError).send({ message: NotFoundError.message }));
       } else {
-        res.status(403).send({ message: 'Нельзя удалить чужую карточку' });
+        res.status(ConflictError.statusCode).send({ message: ConflictError.message });
       }
     })
-    .catch((e) => {
-      if (e.name === 'CastError') {
-        console.error(e);
-        return res.status(400).send({ message: 'Передан некорректный id карточки' });
+    .catch((err) => {
+      if (err instanceof mongoose.Error.ValidationError) {
+        console.error(err);
+        return res.status(BadRequestError.statusCode).send({ message: BadRequestError.message });
       }
-      console.error(e);
-      return res.status(404).send({ message: `Произошла ошибка при попытке удалить карточку ${cardId}` });
+      console.error(err);
+      return res.status(BadRequestError.statusCode).send({ message: BadRequestError.message });
     });
 };
 
@@ -52,16 +62,16 @@ const updateLike = (req, res, next, method) => {
   )
     .then((card) => {
       if (card === null) {
-        res.status(404).send({ message: 'Такой карточки нет' });
+        res.status(NotFoundError.statusCode).send({ message: NotFoundError.message });
       } else {
         res.send({ likes: card.likes });
       }
     })
     .catch((err) => {
-      if (err.name === 'CastError') {
-        res.status(400).send({ message: 'Переданы некорректные данные' });
+      if (err instanceof mongoose.Error.CastError) {
+        res.status(BadRequestError.statusCode).send({ message: BadRequestError.message });
       } else {
-        next(ServerError);
+        res.status(ServerError.statusCode).send({ message: ServerError.message });
       }
     });
 };
