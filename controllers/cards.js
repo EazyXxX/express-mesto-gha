@@ -7,6 +7,12 @@ const UnauthorizedError = require('../errors/UnauthorizedError');
 const ServerError = require('../errors/ServerError');
 const ConflictError = require('../errors/ConflictError');
 
+const UnauthorizedErrorInstance = new UnauthorizedError();
+const BadRequestErrorInstance = new BadRequestError();
+const NotFoundErrorInstance = new NotFoundError();
+const ServerErrorInstance = new ServerError();
+const ConflictErrorInstance = new ConflictError();
+
 const getCards = (req, res, next) => {
   Card.find({})
     .then((cards) => { res.send(cards); })
@@ -24,7 +30,7 @@ const createCard = (req, res, next) => {
     })
     .catch((err) => {
       if (err instanceof mongoose.Error.ValidationError) {
-        res.status(UnauthorizedError.statusCode).send({ message: UnauthorizedError.message });
+        res.status(UnauthorizedErrorInstance.statusCode).send({ message: UnauthorizedErrorInstance.message });
       } else {
         next(err);
       }
@@ -38,18 +44,18 @@ const deleteCard = (req, res) => {
       if (String(card.owner) === req.user._id) {
         Card.findByIdAndRemove(cardId)
           .then(() => res.send({ message: `Карточка ${cardId} удалена` }))
-          .catch(() => res.status(NotFoundError).send({ message: NotFoundError.message }));
+          .catch(() => res.status(NotFoundErrorInstance.statusCode).send({ message: NotFoundErrorInstance.message }));
       } else {
-        res.status(ConflictError.statusCode).send({ message: ConflictError.message });
+        res.status(ConflictErrorInstance.statusCode).send({ message: ConflictErrorInstance.message });
       }
     })
     .catch((err) => {
       if (err instanceof mongoose.Error.ValidationError) {
         console.error(err);
-        return res.status(BadRequestError.statusCode).send({ message: BadRequestError.message });
+        return res.status(BadRequestErrorInstance.statusCode).send({ message: BadRequestErrorInstance.message });
       }
       console.error(err);
-      return res.status(BadRequestError.statusCode).send({ message: BadRequestError.message });
+      return res.status(BadRequestErrorInstance.statusCode).send({ message: BadRequestErrorInstance.message });
     });
 };
 
@@ -62,16 +68,16 @@ const updateLike = (req, res, next, method) => {
   )
     .then((card) => {
       if (card === null) {
-        res.status(NotFoundError.statusCode).send({ message: NotFoundError.message });
+        res.status(NotFoundErrorInstance.statusCode).send({ message: NotFoundErrorInstance.message });
       } else {
         res.send({ likes: card.likes });
       }
     })
     .catch((err) => {
       if (err instanceof mongoose.Error.CastError) {
-        res.status(BadRequestError.statusCode).send({ message: BadRequestError.message });
+        res.status(BadRequestErrorInstance.statusCode).send({ message: BadRequestErrorInstance.message });
       } else {
-        res.status(ServerError.statusCode).send({ message: ServerError.message });
+        res.status(ServerErrorInstance.statusCode).send({ message: ServerErrorInstance.message });
       }
     });
 };

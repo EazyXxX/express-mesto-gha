@@ -10,6 +10,12 @@ const ServerError = require('../errors/ServerError');
 const EmailExistsError = require('../errors/EmailExistsError');
 const { JWT_SECRET } = require('../config');
 
+const UnauthorizedErrorInstance = new UnauthorizedError();
+const BadRequestErrorInstance = new BadRequestError();
+const NotFoundErrorInstance = new NotFoundError();
+const ServerErrorInstance = new ServerError();
+const EmailExistsErrorInstance = new EmailExistsError();
+
 const getUsers = async (req, res, next) => {
   User.find({})
     .then((users) => res.send(users))
@@ -25,19 +31,19 @@ const updateUserProfile = (req, res, next) => {
   try {
     payload = jsonwebtoken.verify(jwt, JWT_SECRET);
   } catch (err) {
-    res.status(UnauthorizedError.statusCode).send({ message: UnauthorizedError.message });
+    res.status(UnauthorizedErrorInstance.statusCode).send({ message: UnauthorizedErrorInstance.message });
   }
   // достаём юзера из БДшки
   User
     .findById(payload._id)
-    .orFail(() => res.status(NotFoundError.statusCode).send({ message: NotFoundError.message }))
+    .orFail(() => res.status(NotFoundErrorInstance.statusCode).send({ message: NotFoundErrorInstance.message }))
     .then(() => {
       User.findByIdAndUpdate(req.user._id, { name, about }, { new: true, runValidators: true })
         .then((users) => res.send(users));
     })
     .catch((err) => {
       if (err instanceof mongoose.Error.ValidationError) {
-        res.status(BadRequestError.statusCode).send({ message: BadRequestError.message });
+        res.status(BadRequestErrorInstance.statusCode).send({ message: BadRequestErrorInstance.message });
       } else {
         next(err);
       }
@@ -53,18 +59,18 @@ const getUser = (req, res) => {
   try {
     payload = jsonwebtoken.verify(jwt, JWT_SECRET);
   } catch (err) {
-    res.status(UnauthorizedError.statusCode).send({ message: UnauthorizedError.message });
+    res.status(UnauthorizedErrorInstance.statusCode).send({ message: UnauthorizedErrorInstance.message });
   }
   // достаём юзера из ДБшки
   User
     .findById(payload._id)
-    .orFail(() => res.status(NotFoundError.statusCode).send({ message: NotFoundError.message }))
+    .orFail(() => res.status(NotFoundErrorInstance.statusCode).send({ message: NotFoundErrorInstance.message }))
     .then((user) => res.send(user))
     .catch((err) => {
       if (err instanceof mongoose.Error.CastError) {
-        res.status(BadRequestError.statusCode).send({ message: BadRequestError.message });
+        res.status(BadRequestErrorInstance.statusCode).send({ message: BadRequestErrorInstance.message });
       }
-      res.status(NotFoundError.statusCode).send({ message: NotFoundError.message });
+      res.status(NotFoundErrorInstance.statusCode).send({ message: NotFoundErrorInstance.message });
     });
 };
 
@@ -74,7 +80,7 @@ const updateUserAvatar = (req, res, next) => {
     .then(() => res.json(avatar))
     .catch((err) => {
       if (err instanceof mongoose.Error.ValidationError) {
-        res.status(BadRequestError.statusCode).send({ message: BadRequestError.message });
+        res.status(BadRequestErrorInstance.statusCode).send({ message: BadRequestErrorInstance.message });
       } else {
         next();
       }
@@ -97,12 +103,12 @@ const signup = async (req, res) => {
   } catch (err) {
     if (err instanceof mongoose.Error.ValidationError) {
       console.error(err);
-      return res.status(UnauthorizedError.statusCode).send({ message: UnauthorizedError.message });
+      return res.status(UnauthorizedErrorInstance.statusCode).send({ message: UnauthorizedErrorInstance.message });
     } if (err.code === 11000) {
-      return res.status(EmailExistsError.statusCode).send({ message: EmailExistsError.message });
+      return res.status(EmailExistsErrorInstance.statusCode).send({ message: EmailExistsErrorInstance.message });
     }
     console.error(err);
-    return res.status(ServerError.statusCode).send({ message: ServerError.message });
+    return res.status(ServerErrorInstance.statusCode).send({ message: ServerErrorInstance.message });
   }
 };
 
@@ -113,13 +119,13 @@ const signin = async (req, res) => {
     const user = await User.findOne({ email }).select('+password');
     console.log(user);
     if (user === null) {
-      res.status(UnauthorizedError.statusCode).send({ message: UnauthorizedError.message });
+      res.status(UnauthorizedErrorInstance.statusCode).send({ message: UnauthorizedErrorInstance.message });
     }
     const matched = await bcrypt.compare(password, user.password);
 
     if (!matched) {
       // хеши не совпали — отклоняем промис
-      res.status(UnauthorizedError.statusCode).send({ message: UnauthorizedError.message });
+      res.status(UnauthorizedErrorInstance.statusCode).send({ message: UnauthorizedErrorInstance.message });
     }
 
     const token = jsonwebtoken.sign(
@@ -130,7 +136,7 @@ const signin = async (req, res) => {
     return res.send({ token });
   } catch (e) {
     console.error(e);
-    return res.status(ServerError.statusCode).send({ message: ServerError.message });
+    return res.status(ServerErrorInstance.statusCode).send({ message: ServerErrorInstance.message });
   }
 };
 
