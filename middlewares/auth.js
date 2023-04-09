@@ -3,13 +3,12 @@ const jwt = require('jsonwebtoken');
 const { JWT_SECRET } = require('../config');
 const UnauthorizedError = require('../errors/UnauthorizedError');
 
-const UnauthorizedErrorInstance = new UnauthorizedError();
-
 const authMiddleware = (req, res, next) => {
   const { authorization } = req.headers;
 
   if (!authorization || !authorization.startsWith('Bearer')) {
-    return res.status(UnauthorizedErrorInstance.statusCode).send({ message: UnauthorizedErrorInstance.message });
+    next(new UnauthorizedError());
+    return;
   }
 
   const token = authorization.replace('Bearer ', '');
@@ -19,7 +18,8 @@ const authMiddleware = (req, res, next) => {
     // попытаемся верифицировать токен
     payload = jwt.verify(token, JWT_SECRET);
   } catch (err) {
-    return res.status(UnauthorizedErrorInstance.statusCode).send({ message: UnauthorizedErrorInstance.message });
+    next(new UnauthorizedError());
+    return;
   }
   req.user = payload;
   next();

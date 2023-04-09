@@ -40,7 +40,9 @@ const updateUserAvatarValidation = celebrate({
 
 const getCardsValidation = celebrate({
   body: Joi.object().keys({
-    _id: Joi.string().required().hex().length(24),
+    owner: Joi.object().keys({
+      _id: Joi.string().required().hex().length(24),
+    }),
   }).unknown(true),
 });
 
@@ -53,7 +55,9 @@ const createCardValidation = celebrate({
 
 const deleteCardValidation = celebrate({
   body: Joi.object().keys({
-    _id: Joi.string().required().hex().length(24),
+    owner: Joi.object().keys({
+      _id: Joi.string().required().hex().length(24),
+    }),
   }).unknown(true),
 });
 
