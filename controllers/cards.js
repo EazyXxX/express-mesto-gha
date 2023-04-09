@@ -67,9 +67,9 @@ const updateLike = (req, res, next, method) => {
     })
     .catch((err) => {
       if (err instanceof mongoose.Error.CastError) {
-        next(new BadRequestError());
+        res.status(new BadRequestError().statusCode).send({ message: new BadRequestError().message });
       } else {
-        next();
+        next(new NotFoundError());
       }
     });
 };
